@@ -1,10 +1,20 @@
 var net = require('net');
+var db = require('./database');
+
+const androidClient = 'ANDROID/';
+
+var client;
 
 console.log('Server is ready.');
 
-net.createServer(function(client) {
+/* Connect to the database */
+db.this.connect(db.isConnected());
+
+net.createServer(function(c) {
 	console.log('Client connected.');
 
+    client = c;
+    
 	client.on('data', handleData);
 
 	client.on('error', function(error) {
@@ -13,13 +23,9 @@ net.createServer(function(client) {
 
 	client.on('end', function() {
 		console.log('Client disconnected.');
-	});
+	});	
 
-	//client.write('hello');
-
-	/*c.write('hello\r\n');
-	c.pipe(c);*/
-}).listen(3000);
+}).listen(1337);
 
 handleData = function(data) {
 	console.log('Received data : ' + data);
@@ -28,29 +34,62 @@ handleData = function(data) {
 	var message = getMessage(data);
 	var messageObj = JSON.parse(message);
 
-	if (event = 'onLogin') {
+	if (event === 'onLogin') {
+        
 		var user  = {
-			username : messageObj.USERNAME,
-			password : messageObj.PASSWORD
+			nom : messageObj.FIRST_NAME,
+			prenom : messageObj.SECOND_NAME,
+			mail : messageObj.EMAIL,
+			alpha : messageObj.ALPHA
+		};		
+        
+		insertUser(user);        
+
+	} else if (event === 'onAssociationRequest') {
+        
+        var robot  = {
+			numSerie : messageObj.SERIAL_NUMBER
 		};
-
-		var robot  = {
-			robotId : messageObj.ROBOT_ID
-		};
-
-		console.log('username=' + user.username);
-		console.log('password=' + user.password);
-		console.log('robotId=' + robot.robotId);
-
-	} else {
+    
+        insertRobot(robot);
+        client.write('ASSOC/' + messageObj.SERIAL_NUMBER + '\r');
+    
+    } else if (event === 'VALID') {
+        client.write(data + '\n');
+        
+    } else {
 		console.log('Error : Event' + event + ' not found.');
 	}
 };
 
 getTag = function(data) {
-	return data.toString().substr(0, data.indexOf('_'));
+	return data.toString().substr(0, data.indexOf('/'));
 };
 
 getMessage = function(data) {
-	return data.toString().substr(data.indexOf('_') + 1);
+	return data.toString().substr(data.indexOf('/') + 1);
+};
+
+insertUser = function(user) {
+	db.this.query('INSERT IGNORE INTO Users SET ?', user)
+        .on('error', function(err) {                
+            client.write(androidClient + 'User insertion failed.\n');
+            console.log(err);
+        })
+        .on('result', function() {
+            client.write(androidClient + 'User insertion succeeded.\n');            
+            console.log('User insertion succeeded.');
+        });
+};
+
+insertRobot = function(robot) {
+	db.this.query('INSERT IGNORE INTO Robots SET ?', robot)
+        .on('error', function(err) {
+            client.write(androidClient + 'Robot insertion failed.\n');
+            console.log(err);
+        })
+        .on('result', function() {
+            client.write(androidClient + 'Robot insertion succeeded.\n');
+            console.log('Robot insertion succeeded.');
+        });
 };
