@@ -3,32 +3,64 @@ var db = require('./database');
 
 const androidClient = 'ANDROID/';
 
-var client;
+var mobileClient;
+var webClient;
 
-console.log('Server is ready.');
+console.log('Node.js server is ready.');
 
 /* Connect to the database */
 db.this.connect(db.isConnected());
 
-net.createServer(function(c) {
-	console.log('Client connected.');
+net.createServer(function(client) {
+	console.log('Android client connected.');
 
-    client = c;
+    mobileClient = client;
     
-	client.on('data', handleData);
+	mobileClient.on('data', handleClientData);
 
-	client.on('error', function(error) {
+	mobileClient.on('error', function(error) {
 		throw error;
 	});
 
-	client.on('end', function() {
-		console.log('Client disconnected.');
-	});	
+	mobileClient.on('end', function() {
+		console.log('Android client disconnected.');
+	});
 
-}).listen(1337);
+}).listen(3000);
 
-handleData = function(data) {
-	console.log('Received data : ' + data);
+var webClient = new net.Socket();
+webClient.connect(60372, function() {    
+    console.log('Spring server is ready.');
+    
+	webClient.on('data', handleServerData);
+
+	webClient.on('error', function(error) {
+		throw error;
+	});
+
+	webClient.on('end', function() {
+		console.log('Spring server disconnected.');
+	});
+    
+}).on('error', (err) => {    
+    console.log('Spring server not found.');
+});
+
+handleServerData = function(data) {
+    console.log('Received data from spring: ' + data); 
+
+    var event = getTag(data);	
+        
+    if (event === 'VALID') {        
+        mobileClient.write(data + '\n');
+        
+    } else {
+        console.log('Error : Event' + event + ' not found.');
+    }
+};
+
+handleClientData = function(data) {
+	console.log('Received data from android: ' + data);
 
 	var event = getTag(data);
 	var message = getMessage(data);
@@ -36,28 +68,17 @@ handleData = function(data) {
 
 	if (event === 'onLogin') {
         
-		var user  = {
-			nom : messageObj.FIRST_NAME,
-			prenom : messageObj.SECOND_NAME,
-			mail : messageObj.EMAIL,
-			alpha : messageObj.ALPHA
-		};		
-        
-		insertUser(user);        
-
-	} else if (event === 'onAssociationRequest') {
-        
         var robot  = {
 			numSerie : messageObj.SERIAL_NUMBER
 		};
-    
-        insertRobot(robot);
-        client.write('ASSOC/' + messageObj.SERIAL_NUMBER + '\r');
-    
-    } else if (event === 'VALID') {
-        client.write(data + '\n');
         
-    } else {
+        insertRobot(robot);
+		//checkUser(messageObj.LOGIN, messageObj.PASS);
+        //const fakeUserId = 'user42';
+        //webClient.write('ASSOC/' + fakeUserId + '/' + messageObj.SERIAL_NUMBER + '\r');
+        webClient.write('ASSOC/' + 1 + '/' + 1 + '\r');
+
+	} else {
 		console.log('Error : Event' + event + ' not found.');
 	}
 };
@@ -70,26 +91,24 @@ getMessage = function(data) {
 	return data.toString().substr(data.indexOf('/') + 1);
 };
 
-insertUser = function(user) {
-	db.this.query('INSERT IGNORE INTO Users SET ?', user)
-        .on('error', function(err) {                
-            client.write(androidClient + 'User insertion failed.\n');
+checkUser = function(idSession, pass) {
+    db.this.query('SELECT idUser FROM Users WHERE login = ? AND pass = ', idSession, pass)
+        .on('result', function(data) {
+            data.idSession
+            data.pass
+        }).on('error', function(err) {
             console.log(err);
-        })
-        .on('result', function() {
-            client.write(androidClient + 'User insertion succeeded.\n');            
-            console.log('User insertion succeeded.');
-        });
+    });
 };
 
 insertRobot = function(robot) {
 	db.this.query('INSERT IGNORE INTO Robots SET ?', robot)
         .on('error', function(err) {
-            client.write(androidClient + 'Robot insertion failed.\n');
+            mobileClient.write(androidClient + 'Robot insertion failed.\n');
             console.log(err);
         })
         .on('result', function() {
-            client.write(androidClient + 'Robot insertion succeeded.\n');
+            mobileClient.write(androidClient + 'Robot insertion succeeded.\n');
             console.log('Robot insertion succeeded.');
         });
 };
