@@ -42,7 +42,7 @@ webClient.connect(60372, function() {
 		console.log('Spring server disconnected.');
 	});
     
-}).on('error', (err) => {    
+}).on('error', function (err) {
     console.log('Spring server not found.');
 });
 
