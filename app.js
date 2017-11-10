@@ -1,6 +1,6 @@
 var net = require('net');
 var db = require('./database');
-
+var fs=require('fs');
 const androidClient = 'ANDROID/';
 
 var mobileClient;
@@ -60,14 +60,16 @@ handleServerData = function(data) {
 };
 
 handleClientData = function(data) {
-	console.log('Received data from android: ' + data);
+	if (data.length < 100 ) console.log('Received data from android: ' + data);
+	else console.log('Received data from android');
 
 	var event = getTag(data);
 	var message = getMessage(data);
-	var messageObj = JSON.parse(message);
 
 	if (event === 'onLogin') {
-        
+
+		var messageObj = JSON.parse(message);
+
         var robot  = {
 			numSerie : messageObj.SERIAL_NUMBER
 		};
@@ -77,6 +79,15 @@ handleClientData = function(data) {
         //const fakeUserId = 'user42';
         //webClient.write('ASSOC/' + fakeUserId + '/' + messageObj.SERIAL_NUMBER + '\r');
         webClient.write('ASSOC/' + 1 + '/' + 1 + '\r');
+
+	} else if (event === 'onVideo') {
+		fs.writeFile("/home/mrgrandefrite/Bureau/VIDEO.mp4", message, (err) => {
+			if (err) {
+				console.log("FAILED");
+            }
+		});
+		console.log("SUCCESS");
+		mobileClient.write("RECEIVED" + '\n');
 
 	} else {
 		console.log('Error : Event' + event + ' not found.');
