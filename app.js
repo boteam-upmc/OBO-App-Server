@@ -1,6 +1,6 @@
 var net = require('net');
 var db = require('./database');
-var fs=require('fs');
+var fs = require('fs');
 const androidClient = 'ANDROID/';
 
 var mobileClient;
@@ -65,6 +65,7 @@ handleClientData = function(data) {
 
 	var event = getTag(data);
 	var message = getMessage(data);
+	var videoContent;
 
 	if (event === 'onLogin') {
 
@@ -81,25 +82,41 @@ handleClientData = function(data) {
         webClient.write('ASSOC/' + 1 + '/' + 1 + '\r');
 
 	} else if (event === 'onVideo') {
-		fs.writeFile("/home/mrgrandefrite/Bureau/VIDEO.mp4", message, (err) => {
-			if (err) {
-				console.log("FAILED");
-            }
-		});
-		console.log("SUCCESS");
-		mobileClient.write("RECEIVED" + '\n');
+		console.log("HANDLE")
+		if (message !== 'FIN') {
+            videoContent += message;
+        } else {
+            fs.writeFile("/home/mrgrandefrite/Bureau/VIDEO.mp4", videoContent, (err) => {
+                if (err) {
+                    console.log("FAILED");
+                }
+            });
 
+            mobileClient.write('RECEIVED\n');
+        }
 	} else {
 		console.log('Error : Event' + event + ' not found.');
 	}
 };
 
 getTag = function(data) {
-	return data.toString().substr(0, data.indexOf('/'));
+    if (data.toString().includes("onVideo/") ||
+		data.toString().includes("onLogin/")) {
+        return data.toString().substr(0, data.toString().indexOf('/'));
+    } else {
+    	console.log("TAG VIDEO");
+    	return "onVideo";
+    }
 };
 
 getMessage = function(data) {
-	return data.toString().substr(data.indexOf('/') + 1);
+	if (data.toString().includes("onVideo/") ||
+		data.toString().includes("onLogin/")) {
+        return data.toString().substr(data.toString().indexOf('/') + 1);
+    } else {
+		console.log("MESSAGE VIDEO");
+		return data.toString();
+    }
 };
 
 checkUser = function(idSession, pass) {
