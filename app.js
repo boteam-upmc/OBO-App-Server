@@ -6,6 +6,8 @@ const androidClient = 'ANDROID/';
 var mobileClient;
 var webClient;
 
+var counter = 0;
+
 console.log('Node.js server is ready.');
 
 /* Connect to the database */
@@ -81,16 +83,16 @@ handleClientData = function(data) {
         webClient.write('ASSOC/' + 1 + '/' + 1 + '\r');
 
 	} else if (event === 'onVideo') {
-		if (message !== 'EOF') {
-            fs.appendFile('/home/mrgrandefrite/Bureau/VIDEO.mp4', message, function (err) {
-                if (err) throw err;
-                console.log('Saved!');
-            });
-		} else {
+	    if (message === 'EOF') {
+	        counter = counter + 1;
             mobileClient.write('RECEIVED\n');
+	    } else {
+            fs.appendFile('/home/mrgrandefrite/Bureau/VIDEO_' + counter + '.mp4', message, function (err) {
+                if (err) throw err;
+            });
         }
 	} else {
-		fs.writeFile("/home/mrgrandefrite/Bureau/error.txt", event + "\n\n\n" + message, (err) => {
+		fs.writeFile("/home/mrgrandefrite/Bureau/error_" + counter + ".txt", event + "\n\n\n" + message, (err) => {
             if (err) {
                 console.log("FAILED");
             }
