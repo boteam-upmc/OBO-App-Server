@@ -82,10 +82,9 @@ handleClientData = function(data) {
 
 	} else if (event === 'onVideo') {
 		if (message !== 'EOF') {
-            fs.writeFile("/home/mrgrandefrite/Bureau/VIDEO.mp4", message, (err) => {
-                if (err) {
-                    console.log("FAILED");
-                }
+            fs.appendFile('/home/mrgrandefrite/Bureau/VIDEO.mp4', message, function (err) {
+                if (err) throw err;
+                console.log('Saved!');
             });
 		} else {
             mobileClient.write('RECEIVED\n');
@@ -101,21 +100,22 @@ handleClientData = function(data) {
 };
 
 getTag = function(data) {
-    if (data.toString().includes("onVideo/") ||
-		data.toString().includes("onLogin/")) {
-        return data.toString().substr(0, data.toString().indexOf('/'));
-    } else {
-    	return "onVideo";
+    var stringData = data.toString();
+    if (stringData.includes("onVideo/") ||
+		stringData.includes("onLogin/")) {
+        return stringData.substr(0, stringData.indexOf('/'));
     }
+    return "onVideo";
+
 };
 
 getMessage = function(data) {
-	if (data.toString().includes("onVideo/") ||
-		data.toString().includes("onLogin/")) {
-        return data.toString().substr(data.toString().indexOf('/') + 1);
-    } else {
-		return data;
+    var stringData = data.toString();
+	if (stringData.includes("onVideo/") ||
+		stringData.includes("onLogin/")) {
+        return stringData.substr(stringData.indexOf('/') + 1);
     }
+    return data;
 };
 
 checkUser = function(idSession, pass) {
