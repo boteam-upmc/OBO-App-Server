@@ -86,6 +86,7 @@ handleClientData = function(data) {
 	    if (message === 'EOF') {
 	        counter = counter + 1;
             mobileClient.write('RECEIVED\n');
+            //insertVideo(video);
 	    } else {
             fs.appendFile('/home/mrgrandefrite/Bureau/VIDEO_' + counter + '.mp4', message, function (err) {
                 if (err) throw err;
@@ -139,5 +140,17 @@ insertRobot = function(robot) {
         .on('result', function() {
             mobileClient.write(androidClient + 'Robot insertion succeeded.\n');
             console.log('Robot insertion succeeded.');
+        });
+};
+
+insertVideo = function(video) {
+    db.this.query('INSERT IGNORE INTO Videos SET ?', video)
+        .on('error', function(err) {
+            mobileClient.write(androidClient + 'Video insertion failed.\n');
+            console.log(err);
+        })
+        .on('result', function() {
+            mobileClient.write(androidClient + 'Video insertion succeeded.\n');
+            console.log('Video insertion succeeded.');
         });
 };
