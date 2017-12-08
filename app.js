@@ -1,10 +1,12 @@
-var net = require('net');
-var db = require('./database');
-var fs = require('fs');
+const net = require('net');
+const db = require('./database');
+const fs = require('fs');
 const androidClient = 'ANDROID/';
 
-var mobileClient;
-var webClient;
+
+var sockets = [];
+
+const svrport = 3000;
 
 var counter = 0;
 
@@ -13,28 +15,41 @@ console.log('Node.js server is ready.');
 /* Connect to the database */
 db.this.connect(db.isConnected());
 
-net.createServer(function(client) {
-	console.log('Android client connected.');
+var svr = net.createServer(function(sock) {
 
-    mobileClient = client;
-    
-	mobileClient.on('data', handleClientData);
+    console.log('Connected: ' + sock.remoteAddress + ':' + sock.remotePort);
 
-	mobileClient.on('error', function(error) {
-		throw error;
-	});
+    sockets.push(sock);
 
-	mobileClient.on('end', function() {
-		console.log('Android client disconnected.');
-	});
+    sock.write('Welcome to server !\n');
 
-}).listen(3000);
+    sock.on('data', function(data) {
+        handleClientData(sock, data);
+    });
+
+    sock.on('error', function(error) {
+        throw error;
+    });
+
+    sock.on('end', function() {
+        console.log('Dsiconnected :' + sock.remoteAddress + ':' + sock.remotePort);
+
+        if(sockets.indexOf(sock) !== -1) {
+            delete sockets[sockets.indexOf(sock)];
+        }
+    });
+
+});
+
+svr.listen(svrport);
 
 var webClient = new net.Socket();
 webClient.connect(60372, function() {    
     console.log('Spring server is ready.');
     
-	webClient.on('data', handleServerData);
+	webClient.on('data', function(data) {
+	    handleServerData(sock, data);
+    });
 
 	webClient.on('error', function(error) {
 		throw error;
@@ -44,39 +59,40 @@ webClient.connect(60372, function() {
 		console.log('Spring server disconnected.');
 	});
     
-}).on('error', function (err) {
+}).on('error', function () {
     console.log('Spring server not found.');
 });
 
-handleServerData = function(data) {
-    console.log('Received data from spring: ' + data); 
+var handleServerData = function(sock, data) {
+    console.log('Received data from spring: ' + data);
 
-    var event = getTag(data);	
-        
-    if (event === 'VALID') {        
-        mobileClient.write(data + '\n');
-        
+    const event = getTag(data);
+    //const id    = getID(data);
+
+    if (event === 'VALID') {
+        sock.write(data + '\n');
+
     } else {
-        console.log('Error : Event' + event + ' not found.');
+        console.log('Error_HSD : Event' + event + ' not found.');
     }
 };
 
-handleClientData = function(data) {
+var handleClientData = function(sock, data) {
 	if (data.length < 100 ) console.log('Received data from android: ' + data);
 	else console.log('Received data from android');
 
-	var event = getTag(data);
-	var message = getMessage(data);
+	const event = getTag(data);
+	const message = getMessage(data);
 
 	if (event === 'onLogin') {
 
-		var messageObj = JSON.parse(message);
+		const messageObj = JSON.parse(message);
 
-        var robot  = {
+        const robot  = {
 			numSerie : messageObj.SERIAL_NUMBER
 		};
         
-        insertRobot(robot);
+        insertRobot(sock, robot);
 		//checkUser(messageObj.LOGIN, messageObj.PASS);
         //const fakeUserId = 'user42';
         //webClient.write('ASSOC/' + fakeUserId + '/' + messageObj.SERIAL_NUMBER + '\r');
@@ -84,8 +100,8 @@ handleClientData = function(data) {
 
 	} else if (event === 'onVideo') {
 	    if (message === 'EOF') {
-	        counter = counter + 1;
-            mobileClient.write('RECEIVED\n');
+            counter = counter + 1;
+            sock.write('RECEIVED\n');
             //insertVideo(video);
 	    } else {
             fs.appendFile('/home/mrgrandefrite/Bureau/VIDEO_' + counter + '.mp4', message, function (err) {
@@ -98,26 +114,45 @@ handleClientData = function(data) {
                 console.log("FAILED");
             }
         });
-		console.log('Error : Event' + event + ' not found.');
+		console.log('Error_HCD : Event ' + event + ' not found.');
 	}
 };
 
-getTag = function(data) {
+getID = function(data) {
     var stringData = data.toString();
-    if (stringData.includes("onVideo/") ||
-		stringData.includes("onLogin/")) {
-        return stringData.substr(0, stringData.indexOf('/'));
+    var lenght = stringData.indexOf('/');
+
+    return stringData.substring(lenght + 1, stringData.indexOf('/', lenght + 1));
+};
+
+getTag = function(data) {
+
+    const stringData = data.toString();
+
+    if (stringData.includes("onVideo") ||
+		stringData.includes("onLogin") ||
+        stringData.includes("VALID")) {
+        return stringData.substring(0, stringData.indexOf('/'));
     }
+
     return "onVideo";
 
 };
 
 getMessage = function(data) {
-    var stringData = data.toString();
-	if (stringData.includes("onVideo/") ||
-		stringData.includes("onLogin/")) {
-        return stringData.substr(stringData.indexOf('/') + 1);
+
+    const stringData = data.toString();
+
+    if (stringData.includes("onLogin") ||
+        stringData.includes("VALID")) {
+        return stringData.substring(stringData.indexOf('/') + 1);
     }
+
+	if (stringData.includes("onVideo")) {
+        const lenght = stringData.indexOf('/', stringData.indexOf('/') + 1);
+        return stringData.substring(lenght + 1);
+    }
+
     return data;
 };
 
@@ -131,26 +166,26 @@ checkUser = function(idSession, pass) {
     });
 };
 
-insertRobot = function(robot) {
-	db.this.query('INSERT IGNORE INTO Robots SET ?', robot)
-        .on('error', function(err) {
-            mobileClient.write(androidClient + 'Robot insertion failed.\n');
+var insertRobot = function(sock, robot) {
+    db.this.query('INSERT IGNORE INTO Robots SET ?', robot)
+        .on('error', function (err) {
+            sock.write(androidClient + 'Robot insertion failed.\n');
             console.log(err);
         })
-        .on('result', function() {
-            mobileClient.write(androidClient + 'Robot insertion succeeded.\n');
+        .on('result', function () {
+            sock.write(androidClient + 'Robot insertion succeeded.\n');
             console.log('Robot insertion succeeded.');
         });
 };
 
-insertVideo = function(video) {
+var insertVideo = function(sock, video) {
     db.this.query('INSERT IGNORE INTO Videos SET ?', video)
-        .on('error', function(err) {
-            mobileClient.write(androidClient + 'Video insertion failed.\n');
+        .on('error', function (err) {
+            sock.write(androidClient + 'Video insertion failed.\n');
             console.log(err);
         })
-        .on('result', function() {
-            mobileClient.write(androidClient + 'Video insertion succeeded.\n');
+        .on('result', function () {
+            sock.write(androidClient + 'Video insertion succeeded.\n');
             console.log('Video insertion succeeded.');
         });
 };
