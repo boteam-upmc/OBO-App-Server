@@ -2,7 +2,7 @@ const net = require('net');
 const db = require('./database');
 const fs = require('fs');
 const androidClient = 'ANDROID/';
-
+const videoDirectory = process.cwd() + "/Video/";
 
 var sockets = [];
 
@@ -104,12 +104,12 @@ var handleClientData = function(sock, data) {
             sock.write('RECEIVED\n');
             //insertVideo(video);
 	    } else {
-            fs.appendFile('/home/mrgrandefrite/Bureau/VIDEO_' + counter + '.mp4', message, function (err) {
+            fs.appendFile(videoDirectory + 'VIDEO_' + counter + '.mp4', message, function (err) {
                 if (err) throw err;
             });
         }
 	} else {
-		fs.writeFile("/home/mrgrandefrite/Bureau/error_" + counter + ".txt", event + "\n\n\n" + message, (err) => {
+		fs.writeFile(videoDirectory + "error_" + counter + ".txt", event + "\n\n\n" + message, (err) => {
             if (err) {
                 console.log("FAILED");
             }
