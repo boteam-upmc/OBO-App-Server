@@ -46,7 +46,7 @@ svr.listen(svrport);
 var webClient = new net.Socket();
 webClient.connect(60372, function() {    
     console.log('Spring server is ready.');
-    
+                
 	webClient.on('data', function(data) {
 	    handleServerData(sock, data);
     });
@@ -167,6 +167,44 @@ checkUser = function(idSession, pass) {
 };
 
 var insertRobot = function(sock, robot) {
+    /***************************Existance***************/
+    console.log("Numero Serie"+ robot.numSerie)
+    
+    var selectString = 'SELECT idRobot FROM Robots WHERE numSerie="'+robot.numSerie+'"';
+
+    //var selectString = "SELECT idRobot FROM Robots WHERE numSerie="+robot.numSerie;
+    db.this.query(selectString, function (error, results, fields) {
+                     if (error) {
+                     console.log(error);
+                     //socket.write("fail internal error"+"\r\n");
+                     }
+                     if (results.length  > 0) {
+                     console.log('Robot already existe');
+                    // socket.write("fail user already exists"+"\r\n");
+                     
+                     } else {
+                    console.log('robot doesn\'t exist');
+                    console.log('new robot insertion ');
+                    // var query = connection.query ( 'INSERT INTO users '+ 'SET user = ?, password = ?, token = ?',
+                                                //   [username, password, token]);
+                   //  socket.write("success"+"\r\n");
+                  }
+                  });
+/*
+    var queryRobotExists = db.this.query(selectString);
+    var resultsLength = queryRobotExists._results.length;
+    
+  //  console.log(resultsLength);
+    
+    if(resultsLength > 0){
+        console.log("fail user already exists\n");
+        
+    }else{
+        console.log("robot does'nt exist befort \n");
+    if(resultsLength==0)
+    }*/
+    /****************************************************/
+    
     db.this.query('INSERT IGNORE INTO Robots SET ?', robot)
         .on('error', function (err) {
             sock.write(androidClient + 'Robot insertion failed.\n');
