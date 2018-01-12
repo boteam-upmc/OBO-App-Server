@@ -67,12 +67,22 @@ server.on('message', function (message, remote) {
                 console.log(err);
             })
             .on('result', function () {
-                ack = new Buffer("VWR");
-                server.send(ack, 0, ack.length, remote.port, remote.address, function (err, bytes) {
-                    console.log("sent VWR");
-                });
-                console.log('Robot insertion succeeded.');
-            });
+
+                db.this.query('UPDATE user SET number_of_videos_taken = number_of_videos_taken + 1 WHERE user_id = 1;')
+                    .on('error', function (err) {
+                        ack = new Buffer("VRR");
+                        server.send(ack, 0, ack.length, remote.port, remote.address, function (err, bytes) {
+                            console.log("sent VRR");
+                        });
+                        console.log(err);
+                    })
+                    .on('result', function () {
+                        ack = new Buffer("VWR");
+                        server.send(ack, 0, ack.length, remote.port, remote.address, function (err, bytes) {
+                            console.log("sent VWR");
+                        });
+                        console.log('Robot insertion succeeded.');
+                    });
 
         videoCounter++;
         imageCounter++;
