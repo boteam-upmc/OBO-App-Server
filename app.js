@@ -31,6 +31,7 @@ var dgram = require('dgram');
 var server = dgram.createSocket('udp4');
 var c = 0;
 var ack = "";
+var dt;
 
 server.on('listening', function () {
     var address = server.address();
@@ -39,15 +40,24 @@ server.on('listening', function () {
 
 server.on('message', function (message, remote) {
     if(message.toString() === "EOF") {
-        db.this.query('INSERT INTO Videos(idVideo, urlImage, urlVideo, duration, date, title, idUser,idRobot) VALUES(' +
+
+        dt = new Date();
+
+        db.this.query('INSERT INTO video(video_id, duration, image_url, robot_id, title, user_id, video_url, creation_date) VALUES(' +
             videoCounter + ',' +
-            '\'' + videoDirectory + 'thumbnail_' + imageCounter + '.png' + '\'' + ',' +
-            '\'' + videoDirectory + 'VIDEO_' + counter + '.mp4' + '\'' + ',' +
             '\'23\'' + ',' +
-            '\'2017-11-12\'' + ',' +
+            '\'' + videoDirectory + 'thumbnail_' + imageCounter + '.png' + '\'' + ',' +
+            '1' + ',' +
             '\'' + 'VIDEO_' + counter + '\'' + ',' +
             '1' + ',' +
-            '1' +
+            '\'' + videoDirectory + 'VIDEO_' + counter + '.mp4' + '\'' + ',' +
+            '\'' + dt.getFullYear()
+                + '-' + dt.getMonth()+1
+                + '-' + dt.getDate()
+                + ' ' + dt.getHours()
+                + ':' + dt.getMinutes()
+                + ':' + dt.getSeconds()
+                + '.' + dt.getMilliseconds() + '\'' +
             ');')
             .on('error', function (err) {
                 ack = new Buffer("VRR");
@@ -166,7 +176,7 @@ var handleClientData = function(sock, data) {
 			numSerie : messageObj.SERIAL_NUMBER
 		};
 
-        insertRobot(sock, robot);
+        //insertRobot(sock, robot);
 		//checkUser(messageObj.LOGIN, messageObj.PASS);
         //const fakeUserId = 'user42';
         //webClient.write('ASSOC/' + fakeUserId + '/' + messageObj.SERIAL_NUMBER + '\r');
@@ -242,7 +252,7 @@ getMessage = function(data) {
 };
 
 checkUser = function(idSession, pass) {
-    db.this.query('SELECT idUser FROM Users WHERE login = ? AND pass = ', idSession, pass)
+    db.this.query('SELECT user_id FROM user WHERE username = ? AND password = ', idSession, pass)
         .on('result', function(data) {
             data.idSession
             data.pass
@@ -252,7 +262,7 @@ checkUser = function(idSession, pass) {
 };
 
 var insertRobot = function(sock, robot) {
-    db.this.query('INSERT IGNORE INTO Robots SET ?', robot)
+    db.this.query('INSERT IGNORE INTO robot SET ?', robot)
         .on('error', function (err) {
             sock.write(androidClient + 'Robot insertion failed.\n');
             console.log(err);
