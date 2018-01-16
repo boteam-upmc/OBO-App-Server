@@ -9,7 +9,7 @@ var sockets = [];
 const svrport = 3000;
 
 var counter = 0;
-var videoCounter = 1011;
+var videoCounter = 50;
 var imageCounter = 0;
 
 console.log('Node.js server is ready.');
@@ -83,6 +83,7 @@ server.on('message', function (message, remote) {
                         });
                         console.log('Robot insertion succeeded.');
                     });
+            });
 
         videoCounter++;
         imageCounter++;
@@ -90,7 +91,7 @@ server.on('message', function (message, remote) {
         c = 0;
 
     } else {
-        console.log(remote.address + ':' + remote.port + ' - ' + 'VIDEO_' + counter + 'packet' + c++);
+        console.log(remote.address + ':' + remote.port + ' - ' + 'VIDEO_' + counter + ' packet_' + c++);
         fs.appendFile(videoDirectory + 'VIDEO_' + counter + '.mp4', message, function (err) {
             if (err) throw err;
         });
