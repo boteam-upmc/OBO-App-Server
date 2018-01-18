@@ -1,6 +1,7 @@
 const net = require('net');
 const db = require('./database');
 const fs = require('fs');
+const bcrypt = require('bcrypt')
 const androidClient = 'ANDROID/';
 const videoDirectory = process.cwd() + "/Video/";
 
@@ -10,10 +11,13 @@ const svrport = 3000;
 
 var counter = 0;
 
+
+
 console.log('Node.js server is ready.');
 
 /* Connect to the database */
 db.this.connect(db.isConnected());
+
 
 var svr = net.createServer(function(sock) {
 
@@ -87,12 +91,13 @@ var handleClientData = function(sock, data) {
 	if (event === 'onLogin') {
 
 		const messageObj = JSON.parse(message);
+        console.log("LOGIN  "+messageObj.LOGIN);
 
         const robot  = {
-			numSerie : messageObj.SERIAL_NUMBER
+            numSerie : messageObj.SERIAL_NUMBER
 		};
         
-        insertRobot(sock, robot);
+        insertRobot(sock, messageObj);
 		//checkUser(messageObj.LOGIN, messageObj.PASS);
         //const fakeUserId = 'user42';
         //webClient.write('ASSOC/' + fakeUserId + '/' + messageObj.SERIAL_NUMBER + '\r');
@@ -166,30 +171,37 @@ checkUser = function(idSession, pass) {
     });
 };
 
-var insertRobot = function(sock, robot) {
+var insertRobot = function(sock, messageObj) {
     /***************************Existance***************/
-    console.log("Numero Serie"+ robot.numSerie)
+   // console.log("Numero Serie"+ robot.numSerie)
     
-    var selectString = 'SELECT idRobot FROM Robots WHERE numSerie="'+robot.numSerie+'"';
+    //var selectString = 'SELECT idRobot FROM Robots WHERE numSerie="'+messageObj.numSerie+'"';
+    /*  const saltRounds = 10;
+const myPlaintextPassword = 's0/\/\P4$$w0rD';
+var hash = bcrypt.hashSync(myPlaintextPassword, saltRounds);
+bcrypt.compare(myPlaintextPassword, hash, function(err, res) {
+    console.log("myPlaintextPassword   "+res);
+});*/
 
-    //var selectString = "SELECT idRobot FROM Robots WHERE numSerie="+robot.numSerie;
-    db.this.query(selectString, function (error, results, fields) {
-                     if (error) {
-                     console.log(error);
-                     //socket.write("fail internal error"+"\r\n");
-                     }
-                     if (results.length  > 0) {
-                     console.log('Robot already existe');
-                    // socket.write("fail user already exists"+"\r\n");
-                     
-                     } else {
-                    console.log('robot doesn\'t exist');
-                    console.log('new robot insertion ');
-                    // var query = connection.query ( 'INSERT INTO users '+ 'SET user = ?, password = ?, token = ?',
-                                                //   [username, password, token]);
-                   //  socket.write("success"+"\r\n");
-                  }
-                  });
+    var userselectString = 'SELECT* FROM Users WHERE login="'+messageObj.LOGIN+'"';
+    
+  db.this.query(userselectString,function(error, resul,field){
+      /* Simulation de la base*/
+      const saltRounds = 10;
+    const myPlaintextPassword = resul[0].passe;
+    var hash = bcrypt.hashSync(myPlaintextPassword, saltRounds);
+
+    bcrypt.compare(messageObj.PASS, hash, function(err, res) {
+      if(res){
+        console.log("OK EGEAU "+resul[0].passe);
+        sock.write('identified\n');
+      }else{
+        sock.write('Notidentified\n');
+        console.log("NOT EGEAU");
+
+      }
+       });
+    });
 /*
     var queryRobotExists = db.this.query(selectString);
     var resultsLength = queryRobotExists._results.length;
@@ -205,7 +217,7 @@ var insertRobot = function(sock, robot) {
     }*/
     /****************************************************/
     
-    db.this.query('INSERT IGNORE INTO Robots SET ?', robot)
+    /*db.this.query('INSERT IGNORE INTO Robots SET ?', robot)
         .on('error', function (err) {
             sock.write(androidClient + 'Robot insertion failed.\n');
             console.log(err);
@@ -213,7 +225,7 @@ var insertRobot = function(sock, robot) {
         .on('result', function () {
             sock.write(androidClient + 'Robot insertion succeeded.\n');
             console.log('Robot insertion succeeded.');
-        });
+        });*/
 };
 
 var insertVideo = function(sock, video) {

@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/boteam-upmc/OBO-App-Server#readme",
   "dependencies": {
+    "bcrypt": "^1.0.3",
     "mysql": "^2.15.0",
     "net": "^1.0.2"
   }
