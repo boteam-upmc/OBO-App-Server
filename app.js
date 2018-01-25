@@ -9,7 +9,7 @@ var sockets = [];
 const svrport = 3000;
 
 var counter = 0;
-var videoCounter = 50;
+var videoCounter = 200;
 var imageCounter = 0;
 
 console.log('Node.js server is ready.');
