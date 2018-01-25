@@ -23,9 +23,9 @@ db.this.connect(db.isConnected());
 /* SOCKET UDP SERVER */
 /* **************** */
 const PORT = 3001;
-//const HOST = "192.168.1.89";
+const HOST = "192.168.1.89";
 //const HOST = "192.168.1.34";
-const HOST = "192.168.43.250";
+//const HOST = "192.168.43.250";
 //const HOST = "192.168.1.22";
 var dgram = require('dgram');
 var server = dgram.createSocket('udp4');
@@ -103,7 +103,7 @@ server.on('message', function (message, remote) {
 
 });
 
-server.bind(PORT, HOST);
+server.bind(PORT);
 
 
 
