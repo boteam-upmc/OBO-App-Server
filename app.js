@@ -1,7 +1,7 @@
 const net = require('net');
 const db = require('./database');
 const fs = require('fs');
-const bcrypt = require('bcrypt')
+//const bcrypt = require('bcrypt')
 const androidClient = 'ANDROID/';
 const videoDirectory = process.cwd() + "/Video/";
 
@@ -278,7 +278,7 @@ var checkUser = function(sock, user) {
 
 
     //messageObj=robot;
-    var userselectString = 'SELECT* FROM user WHERE username="'+user.LOGIN+'"';
+   var userselectString = 'SELECT* FROM user WHERE username="'+user.LOGIN+'"';
     
   db.this.query(userselectString,function(error, resul,field){
       /* Simulation de la base
@@ -291,17 +291,17 @@ var checkUser = function(sock, user) {
         console.log("NOT EGEAU");
      }
 else{
-    const bddhashpass=resul[0].password;
-    bcrypt.compare(user.PASS, bddhashpass, function(err, res) {
-      if(res){
+   // const bddhashpass=resul[0].password;
+   // bcrypt.compare(user.PASS, bddhashpass, function(err, res) {
+    //  if(res){
         console.log("OK EGEAU "+resul[0].passe);
         sock.write('identified\n');
-      }else{
+    //  }else{
         sock.write('Notidentified\n');
         console.log("in else NOT EGEAU");
 
-      }
-       });
+    //  }
+      // });
 }
 });
     
