@@ -1,6 +1,2 @@
-.idea/jsLibraryMappings.xml
-.idea/misc.xml
-.idea/watcherTasks.xml
-.idea/workspace.xml
-.idea/dictionaries/
-node_modules/
+.idea/*
+node_modules
