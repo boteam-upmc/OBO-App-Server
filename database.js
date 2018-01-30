@@ -4,7 +4,7 @@ var db = mysql.createConnection({
 	host: 'localhost',
 	user: 'boteam',
 	password: 'teambot',
-	database: 'bdd_mondiale'
+	database: 'global_db'
 });
 
 var isConnected = function(err) {

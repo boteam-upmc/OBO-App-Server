@@ -1,6 +1,7 @@
 const net = require('net');
 const db = require('./database');
 const fs = require('fs');
+const bcrypt = require('bcrypt')
 const androidClient = 'ANDROID/';
 const videoDirectory = process.cwd() + "/Video/";
 
@@ -182,12 +183,13 @@ var handleClientData = function(sock, data) {
 	if (event === 'onLogin') {
 
 		const messageObj = JSON.parse(message);
+        console.log("LOGIN  "+messageObj.LOGIN);
 
         const robot  = {
 			numSerie : messageObj.SERIAL_NUMBER
 		};
 
-        //insertRobot(sock, robot);
+        checkUser(sock, messageObj);
 		//checkUser(messageObj.LOGIN, messageObj.PASS);
         //const fakeUserId = 'user42';
         //webClient.write('ASSOC/' + fakeUserId + '/' + messageObj.SERIAL_NUMBER + '\r');
@@ -262,7 +264,7 @@ getMessage = function(data) {
     return data;
 };
 
-checkUser = function(idSession, pass) {
+/*checkUser = function(idSession, pass) {
     db.this.query('SELECT user_id FROM user WHERE username = ? AND password = ', idSession, pass)
         .on('result', function(data) {
             data.idSession
@@ -271,9 +273,39 @@ checkUser = function(idSession, pass) {
             console.log(err);
     });
 };
+*/
+var checkUser = function(sock, user) {
 
-var insertRobot = function(sock, robot) {
-    db.this.query('INSERT IGNORE INTO robot SET ?', robot)
+
+    //messageObj=robot;
+    var userselectString = 'SELECT* FROM user WHERE username="'+user.LOGIN+'"';
+    
+  db.this.query(userselectString,function(error, resul,field){
+      /* Simulation de la base
+      const saltRounds = 10;
+    const myPlaintextPassword = resul[0].passe;
+     var hash = bcrypt.hashSync(myPlaintextPassword, saltRounds);*/
+     console.log("NOT "+resul[0]);
+     if(resul[0]==null){
+        sock.write('Notidentified\n');
+        console.log("NOT EGEAU");
+     }
+else{
+    const bddhashpass=resul[0].password;
+    bcrypt.compare(user.PASS, bddhashpass, function(err, res) {
+      if(res){
+        console.log("OK EGEAU "+resul[0].passe);
+        sock.write('identified\n');
+      }else{
+        sock.write('Notidentified\n');
+        console.log("in else NOT EGEAU");
+
+      }
+       });
+}
+});
+    
+   /* db.this.query('INSERT IGNORE INTO robot SET ?', robot)
         .on('error', function (err) {
             sock.write(androidClient + 'Robot insertion failed.\n');
             console.log(err);
@@ -281,7 +313,7 @@ var insertRobot = function(sock, robot) {
         .on('result', function () {
             sock.write(androidClient + 'Robot insertion succeeded.\n');
             console.log('Robot insertion succeeded.');
-        });
+        });*/
 };
 
 var insertVideo = function(sock, video) {
