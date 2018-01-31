@@ -1,7 +1,6 @@
 const net = require('net');
 const db = require('./database');
 const fs = require('fs');
-//const bcrypt = require('bcrypt')
 const androidClient = 'ANDROID/';
 const videoDirectory = process.cwd() + "/resources/";
 const nameDirectory = "/resources/";
@@ -11,8 +10,6 @@ var sockets = [];
 const svrport = 3000;
 
 var counter = new Date().getMinutes() + "" + new Date().getSeconds() + "" + new Date().getUTCMilliseconds();
-//var videoCounter = 100;
-//var imageCounter = 100;
 
 console.log('Node.js server is ready.');
 
