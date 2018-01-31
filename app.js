@@ -401,3 +401,26 @@ var insertVideo = function(sock, video) {
             console.log('Video insertion succeeded.');
         });
 };
+
+// ************ ROBOT Control ************
+var express = require('express');
+var app = express();
+var serverApp = require('http').Server(app);
+var io = require('socket.io')(serverApp);
+var constant = require('./constants');
+var handleRobotControlEvents = require('./events-receiver');
+
+app.use(express.static('public'));
+serverApp.listen(1337);
+
+io.on(constant.EVENT_CONNECT, function (socket) {
+        
+    console.log('Client %s connected.', socket.id);    
+    
+    socket.on('getStream', function (stream) {    
+        socket.broadcast.emit('setStream', stream);
+    });        
+        
+    handleRobotControlEvents(socket);
+});
+// ************ ROBOT Control ************
