@@ -55,8 +55,8 @@ server.on('message', function (message, remote) {
             + ':' + dt.getMinutes()
             + ':' + dt.getSeconds()
             + '.' + dt.getMilliseconds() + '\'' + ',' +
-            '\'23\'' + ',' +
-            '\'' + nameDirectory + 'thumbnail_' + counter + '.png' + '\'' + ',' +
+            '\'mp4\'' + ',' +
+            '\'' + nameDirectory + 'thumbnail' + '.jpeg' + '\'' + ',' +
             split[2] + ',' +
             '\'' + 'VIDEO_' + counter + '\'' + ',' +
             split[1] + ',' +
