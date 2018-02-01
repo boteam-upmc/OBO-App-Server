@@ -7,7 +7,7 @@ const nameDirectory = "/resources/";
 
 var sockets = [];
 
-const svrport = 3000;
+const svrport = 3500;
 
 var counter = new Date().getMinutes() + "" + new Date().getSeconds() + "" + new Date().getUTCMilliseconds();
 
@@ -408,7 +408,7 @@ var constant = require('./constants');
 var handleRobotControlEvents = require('./events-receiver');
 
 app.use(express.static('public'));
-serverApp.listen(1337);
+serverApp.listen(3000);
 
 io.on(constant.EVENT_CONNECT, function (socket) {
         
