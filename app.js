@@ -33,6 +33,8 @@ server.on('listening', function () {
     console.log('UDP Server listening on ' + address.address + ":" + address.port);
 });
 
+/* handle client videos */
+
 server.on('message', function (message, remote) {
     if(message.toString().startsWith("EOF")) {
 
@@ -104,7 +106,7 @@ server.bind(PORT);
 
 
 
-
+/* Handle client data */
 
 
 var svr = net.createServer(function(sock) {
@@ -136,6 +138,8 @@ var svr = net.createServer(function(sock) {
 svr.listen(svrport);
 
 
+/* insert new robot into database and insert association request into database */
+
 var handleClientData = function(sock, data) {
 	if (data.length < 200 ) console.log('Received data from android: ' + data);
 	else console.log('Received data from android');
@@ -156,10 +160,6 @@ var handleClientData = function(sock, data) {
 		};
 
         checkUser(sock, messageObj);
-		//checkUser(messageObj.LOGIN, messageObj.PASS);
-        //const fakeUserId = 'user42';
-        //webClient.write('ASSOC/' + fakeUserId + '/' + messageObj.SERIAL_NUMBER + '\r');
-        webClient.write('ASSOC/' + 1 + '/' + 1 + '\r');
 
 	}else if(event === 'onAssociation') {
         //const messageObjAssoc = JSON.parse(message);
@@ -230,6 +230,8 @@ getID = function(data) {
     return stringData.substring(lenght + 1, stringData.indexOf('/', lenght + 1));
 };
 
+/* get the tag of a message */
+
 getTag = function(data) {
 
     const stringData = data.toString();
@@ -243,6 +245,8 @@ getTag = function(data) {
 
 };
 
+/* get the body of a message */
+
 getMessage = function(data) {
 
     const stringData = data.toString();
@@ -254,6 +258,8 @@ getMessage = function(data) {
 
     return data;
 };
+
+/* check if the user is in the database */
 
 var checkUser = function(sock, user) {
 
