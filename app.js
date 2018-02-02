@@ -22,10 +22,6 @@ db.this.connect(db.isConnected());
 /* SOCKET UDP SERVER */
 /* **************** */
 const PORT = 3001;
-//const HOST = "192.168.1.89";
-//const HOST = "192.168.1.34";
-const HOST = "192.168.43.250";
-//const HOST = "192.168.1.22";
 var dgram = require('dgram');
 var server = dgram.createSocket('udp4');
 var c = 0;
@@ -88,8 +84,6 @@ server.on('message', function (message, remote) {
                     });
             });
 
-        //videoCounter++;
-        //imageCounter++;
         counter = new Date().getMinutes() + "" + new Date().getSeconds() + "" + new Date().getUTCMilliseconds();
         c = 0;
 
@@ -141,39 +135,6 @@ var svr = net.createServer(function(sock) {
 
 svr.listen(svrport);
 
-var webClient = new net.Socket();
-webClient.connect(60372, function() {
-    console.log('Spring server is ready.');
-
-	webClient.on('data', function(data) {
-	    handleServerData(sock, data);
-    });
-
-	webClient.on('error', function(error) {
-		throw error;
-	});
-
-	webClient.on('end', function() {
-		console.log('Spring server disconnected.');
-	});
-
-}).on('error', function () {
-    console.log('Spring server not found.');
-});
-
-var handleServerData = function(sock, data) {
-    console.log('Received data from spring: ' + data);
-
-    const event = getTag(data);
-    //const id    = getID(data);
-
-    if (event === 'VALID') {
-        sock.write(data + '\n');
-
-    } else {
-        console.log('Error_HSD : Event' + event + ' not found.');
-    }
-};
 
 var handleClientData = function(sock, data) {
 	if (data.length < 200 ) console.log('Received data from android: ' + data);
@@ -259,41 +220,7 @@ var handleClientData = function(sock, data) {
                 });
             });
 
-        /*var id_user = get_user_id(messageObj.LOGIN, messageObj.PASS);
-
-        console.log(id_user);
-
-        insert_association(id_user, id_robot);*/
-
-    }else if (event === 'onVideo') {
-	    if (message === 'EOF') {
-            counter = counter + 1;
-            //soReceived data from androidck.write('RECEIVED\n');
-            console.log("DC_RECEIVED");
-
-	    } else if (data.toString().endsWith("EOF")) {
-            fs.appendFile(videoDirectory + 'VIDEO_' + counter + '.mp4', data.toString().substring(0, data.toString().indexOf("onVideo")), function (err) {
-                if (err) throw err;
-            });
-            console.log("RECEIVED " + counter);
-            sock.write('DC_RECEIVED ' + counter++ + '\n');
-        } else {
-            fs.appendFile(videoDirectory + 'VIDEO_' + counter + '.mp4', message, function (err) {
-                if (err) throw err;
-            });
-        }
-
-	} else if (event === 'TEST') {
-        sock.write("DC : YOUPI !!!\n");
-
-    } else {
-		fs.writeFile(videoDirectory + "error_" + counter + ".txt", event + "\n\n\n" + message, (err) => {
-            if (err) {
-                console.log("FAILED");
-            }
-        });
-		console.log('Error_HCD : Event ' + event + ' not found.');
-	}
+    }
 };
 
 getID = function(data) {
@@ -308,9 +235,7 @@ getTag = function(data) {
     const stringData = data.toString();
 
     if (stringData.includes("onLogin") ||
-        stringData.includes("onAssociation") ||
-        stringData.includes("VALID")  ||
-        stringData.startsWith("TEST")) {
+        stringData.includes("onAssociation")) {
         return stringData.substring(0, stringData.indexOf('/'));
     }
 
@@ -323,29 +248,13 @@ getMessage = function(data) {
     const stringData = data.toString();
 
     if (stringData.includes("onLogin") ||
-        stringData.includes("onAssociation") ||
-        stringData.includes("VALID")  ||
-        stringData.includes("TEST")) {
+        stringData.includes("onAssociation")) {
         return stringData.substring(stringData.indexOf('/') + 1);
     }
-
-	/*if (stringData.includes("onVideo")) {
-        return stringData.substring(stringData.indexOf('/') + 1);
-    }*/
 
     return data;
 };
 
-/*checkUser = function(idSession, pass) {
-    db.this.query('SELECT user_id FROM user WHERE username = ? AND password = ', idSession, pass)
-        .on('result', function(data) {
-            data.idSession
-            data.pass
-        }).on('error', function(err) {
-            console.log(err);
-    });
-};
-*/
 var checkUser = function(sock, user) {
 
 
@@ -353,10 +262,7 @@ var checkUser = function(sock, user) {
    var userselectString = 'SELECT* FROM user WHERE username="'+user.LOGIN+'"';
     
   db.this.query(userselectString,function(error, resul,field){
-      /* Simulation de la base
-      const saltRounds = 10;
-    const myPlaintextPassword = resul[0].passe;
-     var hash = bcrypt.hashSync(myPlaintextPassword, saltRounds);*/
+
      console.log("NOT "+resul[0]);
      if(resul[0]==null){
         sock.write('Notidentified\n');
@@ -375,28 +281,7 @@ var checkUser = function(sock, user) {
 
     }
 });
-    
-   /* db.this.query('INSERT IGNORE INTO robot SET ?', robot)
-        .on('error', function (err) {
-            sock.write(androidClient + 'Robot insertion failed.\n');
-            console.log(err);
-        })
-        .on('result', function () {
-            sock.write(androidClient + 'Robot insertion succeeded.\n');
-            console.log('Robot insertion succeeded.');
-        });*/
-};
 
-var insertVideo = function(sock, video) {
-    db.this.query('INSERT IGNORE INTO Videos SET ?', video)
-        .on('error', function (err) {
-            sock.write(androidClient + 'Video insertion failed.\n');
-            console.log(err);
-        })
-        .on('result', function () {
-            sock.write(androidClient + 'Video insertion succeeded.\n');
-            console.log('Video insertion succeeded.');
-        });
 };
 
 // ************ ROBOT Control ************
